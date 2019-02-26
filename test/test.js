@@ -573,11 +573,55 @@ describe('S3', function () {
 		})
 	})
 
+  context('can get portions of a file by range', function () {
+
+    it("reads the beginning of file", (done) => {
+      s3.getObject({ Key: 'animal.txt', Bucket: __dirname + '/local/otters', Range: 'bytes=0-5' }, function (err, data) {
+
+        var expectedBody = "My fav";
+        expect(err).to.be.null;
+        expect(data.ETag).to.equal('"fca1d3756e782ba09ed55cf18037b3ad"');
+        expect(data.Key).to.equal('animal.txt');
+        expect(data.Body.toString()).to.equal(expectedBody);
+        expect(data.ContentLength).to.equal(expectedBody.length);
+        expect(data.ContentRange).to.equal('bytes 0-5/19');
+        done();
+      });
+    });
+
+    it("reads the middle of file", (done) => {
+      s3.getObject({ Key: 'animal.txt', Bucket: __dirname + '/local/otters', Range: 'bytes=3-6' }, function (err, data) {
+
+        var expectedBody = "favo";
+        expect(err).to.be.null;
+        expect(data.ETag).to.equal('"2711486495b774c8f85820acd2a642a4"');
+        expect(data.Key).to.equal('animal.txt');
+        expect(data.Body.toString()).to.equal(expectedBody);
+        expect(data.ContentLength).to.equal(expectedBody.length);
+        expect(data.ContentRange).to.equal('bytes 3-6/19');
+        done();
+      });
+    });
+
+    it("reads the end of file", (done) => {
+      s3.getObject({ Key: 'animal.txt', Bucket: __dirname + '/local/otters', Range: 'bytes=15-500' }, function (err, data) {
+
+        var expectedBody = "imal";
+        expect(err).to.be.null;
+        expect(data.ETag).to.equal('"d7208fbc1ef486adb3c8fb45779dcc30"');
+        expect(data.Key).to.equal('animal.txt');
+        expect(data.Body.toString()).to.equal(expectedBody);
+        expect(data.ContentLength).to.equal(expectedBody.length);
+        expect(data.ContentRange).to.equal('bytes 15-18/19');
+        done();
+      });
+    });
+  });
+	
+
 	it('should get a readable stream out of a file', function (done) {
 		var expectedBody = 'My favourite animal'
-
 		var request = s3.getObject({ Key: 'animal.txt', Bucket: path.join(__dirname, '/local/otters') })
-
 		// Duck type-check the request object. It must have ALL of the following at least:
 		expect(request).to.have.property('promise')
 		expect(request).to.have.property('send')
